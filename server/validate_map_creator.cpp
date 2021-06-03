@@ -1,4 +1,5 @@
 #include "worldmap.hpp"
+#include <SDL2/SDL.h>
 
 using namespace Netocracy;
 

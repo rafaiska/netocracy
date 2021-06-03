@@ -1,28 +1,23 @@
 DIRINCLUDE=./include
 DIROBJETO=./obj
 CC=g++
-CFLAGS=-I$(DIRINCLUDE) -g -lSDL2_net
+CFLAGS=-I$(DIRINCLUDE) -g -lSDL2 -std=c++2a
 
-_DEPEND = cs_network.h
+_DEPEND = worldmap.hpp map.hpp
 DEPEND = $(patsubst %,$(DIRINCLUDE)/%,$(_DEPEND))
 
-_OBJETO = cs_network.o client.o proxy.o server.o
+_OBJETO = worldmap.o map.o validate_map_creator.o
 OBJETO = $(patsubst %,$(DIROBJETO)/%,$(_OBJETO))
 
 $(DIROBJETO)/%.o: %.cpp $(DEPEND)
 	@mkdir -p obj
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-all: client.out proxy.out server.out
+all: validate_map_creator.out
 
-client.out: ./obj/cs_network.o ./obj/client.o
-	@mkdir -p client
-	$(CC) -o ./client/$@ $^ $(CFLAGS)
+validate_map_creator.out: ./obj/worldmap.o ./obj/validate_map_creator.o
+	$(CC) -o ./bin/$@ $^ $(CFLAGS)
 
-proxy.out: ./obj/cs_network.o ./obj/proxy.o
-	@mkdir -p proxy
-	$(CC) -o ./proxy/$@ $^ $(CFLAGS)
-
-server.out: ./obj/cs_network.o ./obj/server.o
-	@mkdir -p server
-	$(CC) -o ./server/$@ $^ $(CFLAGS) -pthread
+clean:
+	rm -f ./bin/*
+	rm -f ./obj/*

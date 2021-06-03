@@ -2,7 +2,7 @@
 
 using namespace Netocracy;
 
-void MapSquare::setRiverDirection(char origin, char destination, bool from) {
+void WorldMapSquare::setRiverDirection(char origin, char destination, bool from) {
 	this->haveRiver = true;
 	//TODO: Validate origin, destination in {N, S, E, W}
 	if(from) {
@@ -15,52 +15,52 @@ void MapSquare::setRiverDirection(char origin, char destination, bool from) {
 	}
 }
 
-const char* MapSquare::getRiverDirectionStr(bool from) {
+const char* WorldMapSquare::getRiverDirectionStr(bool from) {
 	if(from && this->riverDirectionFrom) return this->riverDirectionFrom->getDirectionStr();
 	else if(!from && this->riverDirectionTo) return this->riverDirectionTo->getDirectionStr();
 	else return "";
 }
 
-void Map::allocateBlankMap() {
-	map_ = new MapSquare*[xDimension_];
+void WorldMap::allocateBlankMap() {
+	map_ = new WorldMapSquare*[xDimension_];
 	for (int row = 0; row < xDimension_; ++row) {
-		map_[row] = new MapSquare[yDimension_];
+		map_[row] = new WorldMapSquare[yDimension_];
 		for (int column = 0; column < yDimension_; ++column) {
-			map_[row][column] = MapSquare(row, column);
+			map_[row][column] = WorldMapSquare(row, column);
 			map_[row][column].setElevation(0.0);
 		}
 	}
 }
 
-MapSquare* MapBuilder::fetchRandomLandSquare() {
+WorldMapSquare* MapBuilder::fetchRandomLandSquare() {
 	while(true) {
 		int xCoordinate = rand() % this->xDimension;
 		int yCoordinate = rand() % this->yDimension;
-		MapSquare* candidate = this->newMap->getSquare(xCoordinate, yCoordinate);
+		WorldMapSquare* candidate = this->newMap->getSquare(xCoordinate, yCoordinate);
 		if(candidate->getElevation() >= 0.0) return candidate;
 	}
 }
 
-void MapBuilder::fillEdgesAndQueueThem(std::queue<MapSquare*>& squareQueue) {
+void MapBuilder::fillEdgesAndQueueThem(std::queue<WorldMapSquare*>& squareQueue) {
 	for(int xi=0; xi<this->xDimension; ++xi) {
-		MapSquare* top = this->newMap->getSquare(xi, 0);
-		MapSquare* bottom = this->newMap->getSquare(xi, this->yDimension - 1);
+		WorldMapSquare* top = this->newMap->getSquare(xi, 0);
+		WorldMapSquare* bottom = this->newMap->getSquare(xi, this->yDimension - 1);
 		top->setElevation(-1.0); squareQueue.push(top);
 		bottom->setElevation(-1.0); squareQueue.push(bottom);
 	}
 	for(int yi=1; yi<this->yDimension - 1; ++yi) {
-		MapSquare* left = this->newMap->getSquare(0, yi);
-		MapSquare* right = this->newMap->getSquare(this->xDimension - 1, yi);
+		WorldMapSquare* left = this->newMap->getSquare(0, yi);
+		WorldMapSquare* right = this->newMap->getSquare(this->xDimension - 1, yi);
 		left->setElevation(-1.0); squareQueue.push(left);
 		right->setElevation(-1.0); squareQueue.push(right);
 	}
 }
 
-bool MapBuilder::tryFloodSquare(MapSquare* mapSquare) {
-	if(mapSquare->getElevation() >= 0.0) {
+bool MapBuilder::tryFloodSquare(WorldMapSquare* WorldMapSquare) {
+	if(WorldMapSquare->getElevation() >= 0.0) {
 		float randomRoll = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX/1.0));
 		if(randomRoll <= FLOOD_RATE) {
-			mapSquare->setElevation(-1.0);
+			WorldMapSquare->setElevation(-1.0);
 			return true;
 		}
 	}
@@ -68,17 +68,17 @@ bool MapBuilder::tryFloodSquare(MapSquare* mapSquare) {
 }
 
 void MapBuilder::createOcean() {
-	std::queue<MapSquare*> squareQueue;
+	std::queue<WorldMapSquare*> squareQueue;
 	this->fillEdgesAndQueueThem(squareQueue);
-	std::set<MapSquare*> visited;
+	std::set<WorldMapSquare*> visited;
 	this->enqueuePeaks(squareQueue);
 	visited.clear();
 	while(!squareQueue.empty()) {
-		MapSquare* current = squareQueue.front();
+		WorldMapSquare* current = squareQueue.front();
 		squareQueue.pop();
-		std::vector<MapSquare*> adjascentSquares;
+		std::vector<WorldMapSquare*> adjascentSquares;
 		this->getAdjascentSquares(current, adjascentSquares);
-		for(MapSquare* aSquare : adjascentSquares) {
+		for(WorldMapSquare* aSquare : adjascentSquares) {
 			if(this->tryFloodSquare(aSquare)) {
 				squareQueue.push(aSquare);
 			}
@@ -89,7 +89,7 @@ void MapBuilder::createOcean() {
 void MapBuilder::randomlyPlacePeaks() {
 	int placed = 0;
 	while(placed < NUMBER_OF_PEAKS) {
-		MapSquare* randomPeakPlace = this->fetchRandomLandSquare();
+		WorldMapSquare* randomPeakPlace = this->fetchRandomLandSquare();
 		if(randomPeakPlace->getElevation() == 0.0) {
 			randomPeakPlace->setElevation(this->maxElevation);
 			this->peaks.push_back(randomPeakPlace);
@@ -98,24 +98,24 @@ void MapBuilder::randomlyPlacePeaks() {
 	}
 }
 
-void MapBuilder::enqueuePeaks(std::queue<MapSquare*>& squareQueue) {
-	for(MapSquare* peak : this->peaks) {
+void MapBuilder::enqueuePeaks(std::queue<WorldMapSquare*>& squareQueue) {
+	for(WorldMapSquare* peak : this->peaks) {
 		squareQueue.push(peak);
 	}
 }
 
 void MapBuilder::smoothPeaks() {
-	std::queue<MapSquare*> squareQueue;
-	std::set<MapSquare*> visited;
+	std::queue<WorldMapSquare*> squareQueue;
+	std::set<WorldMapSquare*> visited;
 	for(int i=0; i<SMOOTH_ITERATIONS; ++i) {
 		this->enqueuePeaks(squareQueue);
 		visited.clear();
 		while(!squareQueue.empty()) {
-			MapSquare* current = squareQueue.front();
+			WorldMapSquare* current = squareQueue.front();
 			squareQueue.pop();
-			std::vector<MapSquare*> adjascentSquares;
+			std::vector<WorldMapSquare*> adjascentSquares;
 			this->getAdjascentSquares(current, adjascentSquares);
-			for(MapSquare* aSquare : adjascentSquares) {
+			for(WorldMapSquare* aSquare : adjascentSquares) {
 				this->transferMassRandom(current, aSquare);
 				if(visited.find(aSquare) == visited.end()) {
 					squareQueue.push(aSquare);
@@ -126,7 +126,7 @@ void MapBuilder::smoothPeaks() {
 	}
 }
 
-void MapBuilder::getAdjascentSquares(MapSquare* centerSquare, std::vector<MapSquare*>& adjascentSquares) {
+void MapBuilder::getAdjascentSquares(WorldMapSquare* centerSquare, std::vector<WorldMapSquare*>& adjascentSquares) {
 	int centerX = centerSquare->getX();
 	int centerY = centerSquare->getY();
 	if(centerX < this->xDimension - 1) {
@@ -143,7 +143,7 @@ void MapBuilder::getAdjascentSquares(MapSquare* centerSquare, std::vector<MapSqu
 	}
 }
 
-void MapBuilder::transferMassRandom(MapSquare* origin, MapSquare* destination) {
+void MapBuilder::transferMassRandom(WorldMapSquare* origin, WorldMapSquare* destination) {
 	if(destination->getElevation() < origin->getElevation()) {
 		float transferRate = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX/TRANSFER_MAX_RATE));
 		float transferMass = origin->getElevation() * transferRate;
@@ -158,13 +158,13 @@ void MapBuilder::transferMassRandom(MapSquare* origin, MapSquare* destination) {
 
 void MapBuilder::randomlyPlaceRiverSources() {
 	for(int i=0; i<NUMBER_OF_RIVER_SOURCES; ++i) {
-		MapSquare* riverSourcePlace = this->fetchRandomLandSquare();
+		WorldMapSquare* riverSourcePlace = this->fetchRandomLandSquare();
 		riverSourcePlace->setHaveRiver(true);
 		this->riverSources.push_back(riverSourcePlace);
 	}
 }
 
-void MapBuilder::getDirectionFromSquareToSquare(MapSquare* srcSquare, MapSquare* dstSquare, char& origin, char& destination) {
+void MapBuilder::getDirectionFromSquareToSquare(WorldMapSquare* srcSquare, WorldMapSquare* dstSquare, char& origin, char& destination) {
 	if(srcSquare->getX() == dstSquare->getX()) {
 		if(srcSquare->getY() < dstSquare->getY()) {
 			origin = 'N';
@@ -187,12 +187,12 @@ void MapBuilder::getDirectionFromSquareToSquare(MapSquare* srcSquare, MapSquare*
 	}
 }
 
-MapSquare* MapBuilder::setRiverFlowDirection(MapSquare* riverSquare) {
+WorldMapSquare* MapBuilder::setRiverFlowDirection(WorldMapSquare* riverSquare) {
 	if(riverSquare->getElevation() <= 0.0) return riverSquare;
-	std::vector<MapSquare*> adjascentSquares;
+	std::vector<WorldMapSquare*> adjascentSquares;
 	this->getAdjascentSquares(riverSquare, adjascentSquares);
-	MapSquare* minElevationSquare = adjascentSquares[0];
-	for(MapSquare* ms : adjascentSquares) {
+	WorldMapSquare* minElevationSquare = adjascentSquares[0];
+	for(WorldMapSquare* ms : adjascentSquares) {
 		if(ms->getElevation() < minElevationSquare->getElevation()) minElevationSquare = ms;
 	}
 	if(minElevationSquare->getElevation() <= riverSquare->getElevation()) {
@@ -206,9 +206,9 @@ MapSquare* MapBuilder::setRiverFlowDirection(MapSquare* riverSquare) {
 }
 
 void MapBuilder::makeRivers() {
-	for(MapSquare* riverSourceSquare : this->riverSources) {
-		MapSquare* riverSquare = riverSourceSquare;
-		MapSquare* nextRiverSquare = this->setRiverFlowDirection(riverSquare);
+	for(WorldMapSquare* riverSourceSquare : this->riverSources) {
+		WorldMapSquare* riverSquare = riverSourceSquare;
+		WorldMapSquare* nextRiverSquare = this->setRiverFlowDirection(riverSquare);
 		while(nextRiverSquare != riverSquare) {
 			riverSquare = nextRiverSquare;
 			nextRiverSquare = this->setRiverFlowDirection(riverSquare);
