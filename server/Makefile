@@ -15,7 +15,7 @@ $(DIROBJETO)/%.o: %.cpp $(DEPEND)
 
 all: validate_map_creator.out
 
-validate_map_creator.out: ./obj/worldmap.o ./obj/validate_map_creator.o
+validate_map_creator.out: ./obj/worldmap.o ./obj/map.o ./obj/validate_map_creator.o
 	$(CC) -o ./bin/$@ $^ $(CFLAGS)
 
 clean:

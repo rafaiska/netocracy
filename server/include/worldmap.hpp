@@ -35,7 +35,7 @@ namespace Netocracy {
 			void setElevation(float newElevation){this->elevation = newElevation;}
 			void setHaveRiver(bool haveRiver){this->haveRiver = haveRiver;}
 			bool getHaveRiver(){return this->haveRiver;}
-			const char* getRiverDirectionStr(bool from);
+			void getRiverDirectionStr(bool from, char *directionStr);
 			WorldMapSquare(int x, int y): x_(x), y_(y){this->riverDirectionFrom = nullptr; this->riverDirectionTo = nullptr;}
 	};
 	

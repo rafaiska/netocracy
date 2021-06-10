@@ -15,10 +15,10 @@ void WorldMapSquare::setRiverDirection(char origin, char destination, bool from)
 	}
 }
 
-const char* WorldMapSquare::getRiverDirectionStr(bool from) {
-	if(from && this->riverDirectionFrom) return this->riverDirectionFrom->getDirectionStr();
-	else if(!from && this->riverDirectionTo) return this->riverDirectionTo->getDirectionStr();
-	else return "";
+void WorldMapSquare::getRiverDirectionStr(bool from, char *directionStr) {
+	if(from && this->riverDirectionFrom) this->riverDirectionFrom->getDirectionStr(directionStr);
+	else if(!from && this->riverDirectionTo) this->riverDirectionTo->getDirectionStr(directionStr);
+	else directionStr[0] = '\0';
 }
 
 void WorldMap::allocateBlankMap() {
@@ -216,11 +216,11 @@ void MapBuilder::makeRivers() {
 	}
 }
 
-Map MapBuilder::generateRandomMap(int seed, int xDimension, int yDimension, float maxElevation) {
+WorldMap MapBuilder::generateRandomMap(int seed, int xDimension, int yDimension, float maxElevation) {
 	this->xDimension = xDimension;
 	this->yDimension = yDimension;
 	this->maxElevation = maxElevation;
-	this->newMap = new Map(xDimension, yDimension);
+	this->newMap = new WorldMap(xDimension, yDimension);
 
 	srand(seed);
 	newMap->allocateBlankMap();

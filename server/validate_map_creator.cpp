@@ -23,25 +23,28 @@ bool defineRiverRect(SDL_Rect &riverRect, SDL_Rect centerRiverRect, SDL_Rect lan
 	return false;
 }
 
-void getRiverRects(std::vector<SDL_Rect>& riverRects, SDL_Rect landRect, Netocracy::MapSquare* landSquare) {
+void getRiverRects(std::vector<SDL_Rect>& riverRects, SDL_Rect landRect, Netocracy::WorldMapSquare* landSquare) {
 	SDL_Rect centerRiverRect;
 	SDL_Rect fromRiverRect;
 	SDL_Rect toRiverRect;
+	char riverDirectionStr[4];
 	centerRiverRect.h = int(landRect.h / 5.0);
 	centerRiverRect.w = int(landRect.w / 5.0);
 	centerRiverRect.x = landRect.x + int(landRect.w * 2.0 / 5.0);
 	centerRiverRect.y = landRect.y + int(landRect.h * 2.0 / 5.0);
 	riverRects.push_back(centerRiverRect);
-	if (defineRiverRect(fromRiverRect, centerRiverRect, landRect, landSquare->getRiverDirectionStr(true)))
+	landSquare->getRiverDirectionStr(true, riverDirectionStr);	
+	if (defineRiverRect(fromRiverRect, centerRiverRect, landRect, riverDirectionStr))
 		riverRects.push_back(fromRiverRect);
-	if(defineRiverRect(toRiverRect, centerRiverRect, landRect, landSquare->getRiverDirectionStr(false)))
+	landSquare->getRiverDirectionStr(false, riverDirectionStr);
+	if(defineRiverRect(toRiverRect, centerRiverRect, landRect, riverDirectionStr))
 		riverRects.push_back(toRiverRect);
 }
 
-void drawMap(Netocracy::Map map, SDL_Surface* screenSurface, float maxElevation) {
+void drawMap(Netocracy::WorldMap map, SDL_Surface* screenSurface, float maxElevation) {
 	for(int xi=0; xi<MAP_SIZE; ++xi) {
 		for(int yi=0; yi<MAP_SIZE; ++yi) {
-			Netocracy::MapSquare* square = map.getSquare(xi, yi);
+			Netocracy::WorldMapSquare* square = map.getSquare(xi, yi);
 			float elevation = square->getElevation();
 			SDL_Rect rect; rect.x = xi * SQUARE_SIZE; rect.y = yi * SQUARE_SIZE; rect.w = SQUARE_SIZE; rect.h = SQUARE_SIZE;
 			if(elevation >= 0.0) {
@@ -64,7 +67,7 @@ void drawMap(Netocracy::Map map, SDL_Surface* screenSurface, float maxElevation)
 
 int main(int argc, char* args[]) {
 	Netocracy::MapBuilder builder;
-	Netocracy::Map newMap = builder.generateRandomMap(19870911, MAP_SIZE, MAP_SIZE, 10000.0);
+	Netocracy::WorldMap newMap = builder.generateRandomMap(19870911, MAP_SIZE, MAP_SIZE, 10000.0);
 	float maxElevation = builder.getMaxElevation();
 	SDL_Window* window = NULL;
 	SDL_Surface* screenSurface = NULL;
