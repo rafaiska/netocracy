@@ -1,44 +1,27 @@
 #include "worldmap.hpp"
 #include <SDL2/SDL.h>
+#include <time.h>
 
 using namespace Netocracy;
 
-bool defineRiverRect(SDL_Rect &riverRect, SDL_Rect centerRiverRect, SDL_Rect landRect, const char* direction) {
-	if(!strcmp(direction, "N-S") || !strcmp(direction, "S-N")) {
-		riverRect.w = centerRiverRect.w;
-		riverRect.h = centerRiverRect.h * 2;
-		riverRect.x = centerRiverRect.x;
-		if(!strcmp(direction, "N-S")) riverRect.y = centerRiverRect.y - centerRiverRect.h;
-		else riverRect.y = centerRiverRect.y + centerRiverRect.h;
-		return true;
+SDL_Rect* getRiverRect(SDL_Rect landRect, Netocracy::WorldMapSquare* landSquare) {
+	Direction* riverDirection = landSquare->getRiverDirection();
+	char directionStr[4];
+	riverDirection->getDirectionStr(directionStr);
+	SDL_Rect* riverRect = new SDL_Rect();
+	if(!strcmp(directionStr, "N-S") or !strcmp(directionStr, "S-N")) {
+		riverRect->h = landRect.h;
+		riverRect->w = int(landRect.w / 5.0);
+		riverRect->x = landRect.x + int(landRect.w * 2.0 / 5.0);
+		riverRect->y = landRect.y;
 	}
-	else if(!strcmp(direction, "E-W") || !strcmp(direction, "W-E")) {
-		riverRect.h = centerRiverRect.h;
-		riverRect.w = centerRiverRect.w * 2;
-		riverRect.y = centerRiverRect.y;
-		if(!strcmp(direction, "E-W")) riverRect.x = centerRiverRect.x - centerRiverRect.w;
-		else riverRect.x = centerRiverRect.x + centerRiverRect.w;
-		return true;
+	else {
+		riverRect->w = landRect.w;
+		riverRect->h = int(landRect.h / 5.0);
+		riverRect->y = landRect.y + int(landRect.h * 2.0 / 5.0);
+		riverRect->x = landRect.x;
 	}
-	return false;
-}
-
-void getRiverRects(std::vector<SDL_Rect>& riverRects, SDL_Rect landRect, Netocracy::WorldMapSquare* landSquare) {
-	SDL_Rect centerRiverRect;
-	SDL_Rect fromRiverRect;
-	SDL_Rect toRiverRect;
-	char riverDirectionStr[4];
-	centerRiverRect.h = int(landRect.h / 5.0);
-	centerRiverRect.w = int(landRect.w / 5.0);
-	centerRiverRect.x = landRect.x + int(landRect.w * 2.0 / 5.0);
-	centerRiverRect.y = landRect.y + int(landRect.h * 2.0 / 5.0);
-	riverRects.push_back(centerRiverRect);
-	landSquare->getRiverDirectionStr(true, riverDirectionStr);	
-	if (defineRiverRect(fromRiverRect, centerRiverRect, landRect, riverDirectionStr))
-		riverRects.push_back(fromRiverRect);
-	landSquare->getRiverDirectionStr(false, riverDirectionStr);
-	if(defineRiverRect(toRiverRect, centerRiverRect, landRect, riverDirectionStr))
-		riverRects.push_back(toRiverRect);
+	return riverRect;
 }
 
 void drawMap(Netocracy::WorldMap map, SDL_Surface* screenSurface, float maxElevation) {
@@ -54,12 +37,9 @@ void drawMap(Netocracy::WorldMap map, SDL_Surface* screenSurface, float maxEleva
 			else {
 				SDL_FillRect(screenSurface, &rect, SDL_MapRGB(screenSurface->format, 0x00, 0x00, 0x80));
 			}
-			if(square->getHaveRiver()) {
-				std::vector<SDL_Rect> riverRects;
-				getRiverRects(riverRects, rect, square);
-				for(auto riverRect : riverRects) {
-					SDL_FillRect(screenSurface, &riverRect, SDL_MapRGB(screenSurface->format, 0x00, 0x00, 0x80));
-				}
+			if(square->haveRiver()) {
+				SDL_Rect* riverRect = getRiverRect(rect, square);
+				SDL_FillRect(screenSurface, riverRect, SDL_MapRGB(screenSurface->format, 0x00, 0x00, 0x80));
 			}
 		}
 	}
@@ -67,7 +47,8 @@ void drawMap(Netocracy::WorldMap map, SDL_Surface* screenSurface, float maxEleva
 
 int main(int argc, char* args[]) {
 	Netocracy::MapBuilder builder;
-	Netocracy::WorldMap newMap = builder.generateRandomMap(19870911, MAP_SIZE, MAP_SIZE, 10000.0);
+	// Netocracy::WorldMap newMap = builder.generateRandomMap(19870911, MAP_SIZE, MAP_SIZE, 10000.0);
+	Netocracy::WorldMap newMap = builder.generateRandomMap(time(NULL), MAP_SIZE, MAP_SIZE, 10000.0);
 	float maxElevation = builder.getMaxElevation();
 	SDL_Window* window = NULL;
 	SDL_Surface* screenSurface = NULL;

@@ -2,34 +2,23 @@
 
 using namespace Netocracy;
 
-void WorldMapSquare::setRiverDirection(char origin, char destination, bool from) {
-	this->haveRiver = true;
-	//TODO: Validate origin, destination in {N, S, E, W}
-	if(from) {
-		this->riverDirectionFrom = new Direction();
-		this->riverDirectionFrom->setDirection(origin, destination);
-	}
-	else {
-		this->riverDirectionTo = new Direction();
-		this->riverDirectionTo->setDirection(origin, destination);
-	}
-}
-
-void WorldMapSquare::getRiverDirectionStr(bool from, char *directionStr) {
-	if(from && this->riverDirectionFrom) this->riverDirectionFrom->getDirectionStr(directionStr);
-	else if(!from && this->riverDirectionTo) this->riverDirectionTo->getDirectionStr(directionStr);
-	else directionStr[0] = '\0';
+void WorldMapSquare::setRiverDirection(Direction* riverDirection) {
+	if(this->riverDirection) delete this->riverDirection;
+	this->riverDirection = riverDirection;
 }
 
 void WorldMap::allocateBlankMap() {
-	map_ = new WorldMapSquare*[xDimension_];
-	for (int row = 0; row < xDimension_; ++row) {
-		map_[row] = new WorldMapSquare[yDimension_];
-		for (int column = 0; column < yDimension_; ++column) {
-			map_[row][column] = WorldMapSquare(row, column);
-			map_[row][column].setElevation(0.0);
+	map_ = new WorldMapSquare[xDimension_ * yDimension_];
+	for (int row = 0; row < yDimension_; ++row) {
+		for (int column = 0; column < xDimension_; ++column) {
+			map_[xDimension_* row + column].setElevation(0.0);
+			map_[xDimension_* row + column].setCoordinates(column, row);
 		}
 	}
+}
+
+WorldMapSquare* WorldMap::getSquare(int x, int y) {
+	return &(map_[xDimension_* y + x]);
 }
 
 WorldMapSquare* MapBuilder::fetchRandomLandSquare() {
@@ -56,11 +45,11 @@ void MapBuilder::fillEdgesAndQueueThem(std::queue<WorldMapSquare*>& squareQueue)
 	}
 }
 
-bool MapBuilder::tryFloodSquare(WorldMapSquare* WorldMapSquare) {
-	if(WorldMapSquare->getElevation() >= 0.0) {
+bool MapBuilder::tryFloodSquare(WorldMapSquare* worldMapSquare) {
+	if(worldMapSquare->getElevation() >= 0.0) {
 		float randomRoll = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX/1.0));
 		if(randomRoll <= FLOOD_RATE) {
-			WorldMapSquare->setElevation(-1.0);
+			worldMapSquare->setElevation(-1.0);
 			return true;
 		}
 	}
@@ -76,12 +65,15 @@ void MapBuilder::createOcean() {
 	while(!squareQueue.empty()) {
 		WorldMapSquare* current = squareQueue.front();
 		squareQueue.pop();
-		std::vector<WorldMapSquare*> adjascentSquares;
-		this->getAdjascentSquares(current, adjascentSquares);
-		for(WorldMapSquare* aSquare : adjascentSquares) {
-			if(this->tryFloodSquare(aSquare)) {
-				squareQueue.push(aSquare);
+		if(!visited.contains(current)) {
+			std::vector<WorldMapSquare*> adjascentSquares;
+			this->getAdjascentSquares(current, adjascentSquares);
+			for(WorldMapSquare* aSquare : adjascentSquares) {
+				if(this->tryFloodSquare(aSquare)) {
+					squareQueue.push(aSquare);
+				}
 			}
+			visited.insert(current);
 		}
 	}
 }
@@ -159,32 +151,36 @@ void MapBuilder::transferMassRandom(WorldMapSquare* origin, WorldMapSquare* dest
 void MapBuilder::randomlyPlaceRiverSources() {
 	for(int i=0; i<NUMBER_OF_RIVER_SOURCES; ++i) {
 		WorldMapSquare* riverSourcePlace = this->fetchRandomLandSquare();
-		riverSourcePlace->setHaveRiver(true);
 		this->riverSources.push_back(riverSourcePlace);
 	}
 }
 
-void MapBuilder::getDirectionFromSquareToSquare(WorldMapSquare* srcSquare, WorldMapSquare* dstSquare, char& origin, char& destination) {
+Direction* MapBuilder::getDirectionFromSquareToAdjSquare(WorldMapSquare* srcSquare, WorldMapSquare* dstSquare) {
+	char origin='X', destination='X';
+
 	if(srcSquare->getX() == dstSquare->getX()) {
-		if(srcSquare->getY() < dstSquare->getY()) {
+		if(srcSquare->getY() == dstSquare->getY() - 1) {
 			origin = 'N';
 			destination = 'S';
 		}
-		else if(srcSquare->getY() > dstSquare->getY()) {
+		else if(srcSquare->getY() == dstSquare->getY() + 1) {
 			origin = 'S';
 			destination = 'N';
 		}
 	}
 	else if(srcSquare->getY() == dstSquare->getY()) {
-		if(srcSquare->getX() < dstSquare->getX()) {
-			origin = 'W';
-			destination = 'E';
-		}
-		else if(srcSquare->getX() > dstSquare->getX()) {
+		if(srcSquare->getX() == dstSquare->getX() - 1) {
 			origin = 'E';
 			destination = 'W';
 		}
+		else if(srcSquare->getX() == dstSquare->getX() + 1) {
+			origin = 'W';
+			destination = 'E';
+		}
 	}
+	Direction* newDir = new Direction();
+	newDir->setDirection(origin, destination);
+	return newDir;
 }
 
 WorldMapSquare* MapBuilder::setRiverFlowDirection(WorldMapSquare* riverSquare) {
@@ -197,9 +193,10 @@ WorldMapSquare* MapBuilder::setRiverFlowDirection(WorldMapSquare* riverSquare) {
 	}
 	if(minElevationSquare->getElevation() <= riverSquare->getElevation()) {
 		char origin, destination;
-		this->getDirectionFromSquareToSquare(riverSquare, minElevationSquare, origin, destination);
-		riverSquare->setRiverDirection(origin, destination, false);
-		minElevationSquare->setRiverDirection(destination, origin, true);
+		Direction* riverDirectionRS = this->getDirectionFromSquareToAdjSquare(riverSquare, minElevationSquare);
+		Direction* riverDirectionMES = this->getDirectionFromSquareToAdjSquare(riverSquare, minElevationSquare);
+		riverSquare->setRiverDirection(riverDirectionRS);
+		minElevationSquare->setRiverDirection(riverDirectionMES);
 		return minElevationSquare;
 	}
 	return riverSquare;

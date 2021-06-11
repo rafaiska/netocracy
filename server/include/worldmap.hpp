@@ -7,51 +7,47 @@
 #include <algorithm>
 #include <cstring>
 
-#define NUMBER_OF_PEAKS 3
-#define NUMBER_OF_RIVER_SOURCES 6
+#define NUMBER_OF_PEAKS 50
+#define NUMBER_OF_RIVER_SOURCES 50
 #define SQUARE_SIZE 20
-#define SMOOTH_ITERATIONS 70
-#define TRANSFER_MAX_RATE 0.2
-#define MAP_SIZE 25
-#define FLOOD_RATE 0.33
+#define SMOOTH_ITERATIONS 30
+#define TRANSFER_MAX_RATE 0.3
+#define MAP_SIZE 40
+#define FLOOD_RATE 0.45
 
 namespace Netocracy {
 	class WorldMapSquare: public MapSquare {
 		private:
-			bool haveRiver=false;
-			Direction* riverDirectionFrom;
-			Direction* riverDirectionTo;
+			bool riverSource=false;
+			Direction* riverDirection;
 			float elevation;
 			float minTemperature;
 			float maxTemperature;
-			int x_;
-			int y_;
 		
 		public:
-			WorldMapSquare() {this->riverDirectionFrom = nullptr; this->riverDirectionTo = nullptr;}
-			~WorldMapSquare() {if(this->riverDirectionFrom) delete this->riverDirectionFrom; if(this->riverDirectionTo) delete this->riverDirectionTo;}
-			void setRiverDirection(char origin, char destination, bool from);
+			WorldMapSquare() {riverDirection = nullptr;}
+			~WorldMapSquare() {if(riverDirection) delete riverDirection;}
+			void setRiverDirection(Direction* riverDirection);
 			float getElevation() {return this->elevation;}
 			void setElevation(float newElevation){this->elevation = newElevation;}
-			void setHaveRiver(bool haveRiver){this->haveRiver = haveRiver;}
-			bool getHaveRiver(){return this->haveRiver;}
-			void getRiverDirectionStr(bool from, char *directionStr);
-			WorldMapSquare(int x, int y): x_(x), y_(y){this->riverDirectionFrom = nullptr; this->riverDirectionTo = nullptr;}
+			bool haveRiver(){return riverDirection;}
+			Direction* getRiverDirection() {return riverDirection;}
 	};
 	
 	class WorldMap {
 		private:
 			int xDimension_;
 			int yDimension_;
-			WorldMapSquare** map_;
+			WorldMapSquare* map_;
 
 		public:
 			WorldMap(int xDimension, int yDimension)
 			: xDimension_(xDimension),
 			yDimension_(yDimension)
 			{}
+			~WorldMap(){if(map_) delete[] map_;}
 			void allocateBlankMap();
-			WorldMapSquare* getSquare(int x, int y) {return &(this->map_[x][y]);}
+			WorldMapSquare* getSquare(int x, int y);
 	};
 
 	class MapBuilder {
@@ -76,8 +72,9 @@ namespace Netocracy {
 			WorldMapSquare* setRiverFlowDirection(WorldMapSquare* riverSquare);
 			void makeRivers();
 		public:
+			~MapBuilder(){if(newMap) delete newMap;}
 			WorldMap generateRandomMap(int seed, int xDimension, int yDimension, float maxElevation);
 			float getMaxElevation();
-			void getDirectionFromSquareToSquare(WorldMapSquare* srcSquare, WorldMapSquare* dstSquare, char& origin, char& destination);
+			Direction* getDirectionFromSquareToAdjSquare(WorldMapSquare* srcSquare, WorldMapSquare* dstSquare);
 	};
 }

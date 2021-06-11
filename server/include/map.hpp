@@ -1,5 +1,6 @@
 #include <cstring>
 #include <sstream>
+#include <algorithm>
 
 namespace Netocracy {
 	class Direction {
@@ -8,7 +9,7 @@ namespace Netocracy {
 			char destination_;
 		
 		public:
-			void setDirection(char origin, char destination){this->origin_=origin;this->destination_=destination;}
+			void setDirection(char origin, char destination);
 			void getDirectionStr(char *directionStr);
 	};
 
@@ -23,5 +24,10 @@ namespace Netocracy {
             MapSquare(int x, int y): x_(x), y_(y){}
 			int getX(){return this->x_;}
 			int getY(){return this->y_;}
+			void setCoordinates(int x, int y){this->x_ = x; this->y_ = y;}
+	};
+
+	class InvalidCardinalDir {
+
 	};
 }
