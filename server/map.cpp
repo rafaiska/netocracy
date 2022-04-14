@@ -2,19 +2,22 @@
 
 using namespace Netocracy;
 
+const std::string Direction::validCardinals = "NSEW";
+
+bool Direction::isCardinalValid(char cardinal) {
+    return(validCardinals.find(cardinal) != validCardinals.npos);
+}
+
 void Direction::setDirection(char origin, char destination) {
-    char validSD[] = {'N', 'S', 'E', 'W'};
-    char *foundO = std::find(std::begin(validSD), std::end(validSD), origin);
-    char *foundD = std::find(std::begin(validSD), std::end(validSD), destination);
-    if (foundO == std::end(validSD) or foundD == std::end(validSD)) {
-        throw new InvalidCardinalDir();
-    }
+    if (!isCardinalValid(origin))
+        throw InvalidCardinalDir(origin);
     this->origin_=origin;
+
+    if(!isCardinalValid(destination))
+        throw InvalidCardinalDir(destination);
     this->destination_=destination;
 }
 
-void Direction::getDirectionStr(char *directionStr) {
-                std::ostringstream stringStream;
-                stringStream << origin_ << '-' << destination_ << '\0';
-				strcpy(directionStr, stringStream.str().c_str());
+const char* InvalidCardinalDir::what() const throw(){
+    return "Invalid Cardinal Direction";
 }

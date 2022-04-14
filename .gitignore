@@ -1,3 +1,20 @@
+#VSCODE
 server/obj
 server/bin
 .vscode
+
+#CMAKE BUILD
+build
+
+#ASSETS
+client/assets
+
+#LATEX
+*.aux
+*.idx
+*.pdf
+*.toc
+*.dvi
+*.log
+*.gz
+*.bak

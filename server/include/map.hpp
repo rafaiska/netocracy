@@ -1,33 +1,48 @@
-#include <cstring>
+#include <string>
 #include <sstream>
 #include <algorithm>
+#include <exception>
+#include <vector>
 
 namespace Netocracy {
 	class Direction {
 		private:
 			char origin_;
 			char destination_;
+			static const std::string validCardinals;
 		
 		public:
+			Direction(char origin, char destination){setDirection(origin, destination);}
+			static bool isCardinalValid(char cardinal);
 			void setDirection(char origin, char destination);
-			void getDirectionStr(char *directionStr);
+			char getOrigin(){return origin_;}
+			char getDestination(){return destination_;}
+	};
+
+	class MapSquareObject {
+		std::string id;
+	};
+
+	enum class TerrainType {
+		WATER,
+		GRASS,
+		SAND,
+		ROCK
 	};
 
 	class MapSquare {
-		private:
-			int x_;
-			int y_;
-		
 		public:
-			MapSquare() {}
-			~MapSquare() {}
-            MapSquare(int x, int y): x_(x), y_(y){}
-			int getX(){return this->x_;}
-			int getY(){return this->y_;}
-			void setCoordinates(int x, int y){this->x_ = x; this->y_ = y;}
+		int x_;
+		int y_;
+		TerrainType terrainType;
+		std::vector<MapSquareObject> objects;
 	};
 
-	class InvalidCardinalDir {
+	class InvalidCardinalDir: public std::exception{
+		char invalidDirection_;
 
+		public:
+		InvalidCardinalDir(char invalidDirection): invalidDirection_(invalidDirection){}
+		const char* what() const throw();
 	};
 }
