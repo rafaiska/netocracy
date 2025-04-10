@@ -17,3 +17,11 @@ client/assets
 *.log
 *.gz
 *.bak
+
+#PYTHON BINARIES
+*.pyc
+
+#account_manager
+account_manager/.venv
+account_manager/.idea
+account_manager/db.sqlite3
