@@ -3,6 +3,7 @@ from datetime import timedelta, datetime, UTC
 
 from django.contrib.auth.models import Group, User
 from django.db.models import QuerySet
+from django.http import HttpResponse
 from django.http import JsonResponse
 from rest_framework import permissions, viewsets
 from rest_framework.decorators import api_view
@@ -17,7 +18,7 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
 
 
 class GroupViewSet(viewsets.ModelViewSet):
@@ -26,7 +27,15 @@ class GroupViewSet(viewsets.ModelViewSet):
     """
     queryset = Group.objects.all().order_by('name')
     serializer_class = GroupSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+
+class SessionViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows groups to be viewed or edited.
+    """
+    queryset = NCYSession.objects.all().order_by('-created')
+    serializer_class = GroupSerializer
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
 
 
 def get_or_create_udata(user):
@@ -47,6 +56,8 @@ def expired(u_session):
 @api_view(['GET'])
 def get_current_session(request, username):
     user = User.objects.get_by_natural_key(username)
+    if user != request.user:
+        return HttpResponse(status=401)
     udata = get_or_create_udata(user)
     if udata.last_session is None or expired(udata.last_session):
         new_session = NCYSession()
@@ -59,6 +70,5 @@ def get_current_session(request, username):
         udata.last_session = new_session
         udata.save()
 
-    if request.method == 'GET':
-        serializer = NCYSessionSerializer(udata.last_session, context={'request': request})
-        return JsonResponse(serializer.data)
+    serializer = NCYSessionSerializer(udata.last_session, context={'request': request})
+    return JsonResponse(serializer.data)
