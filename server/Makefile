@@ -1,21 +1,22 @@
 DIRINCLUDE=./include
 DIROBJETO=./obj
 CC=g++
-CFLAGS=-I$(DIRINCLUDE) -g -lSDL2 -std=c++2a
+CFLAGS=-I$(DIRINCLUDE) -g -lcurlpp -lcurl -std=c++2a
 
-_DEPEND = worldmap.hpp map.hpp
+_DEPEND = auth_comm.hpp
 DEPEND = $(patsubst %,$(DIRINCLUDE)/%,$(_DEPEND))
 
-_OBJETO = worldmap.o map.o validate_map_creator.o
+_OBJETO = auth_comm.o main.o
 OBJETO = $(patsubst %,$(DIROBJETO)/%,$(_OBJETO))
 
 $(DIROBJETO)/%.o: %.cpp $(DEPEND)
 	@mkdir -p obj
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-all: validate_map_creator.out
+all: server.out
 
-validate_map_creator.out: ./obj/worldmap.o ./obj/map.o ./obj/validate_map_creator.o
+server.out: ./obj/auth_comm.o ./obj/main.o
+	@mkdir -p bin
 	$(CC) -o ./bin/$@ $^ $(CFLAGS)
 
 clean:
