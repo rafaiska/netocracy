@@ -1,4 +1,4 @@
-#include "include/auth_comm.hpp"
+#include "auth_comm.hpp"
 
 void AuthorizationServerComms::connect() {
   try {

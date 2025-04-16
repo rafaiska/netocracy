@@ -1,6 +1,7 @@
 #VSCODE
 server/obj
 server/bin
+compile_commands.json
 
 #CMAKE BUILD
 build

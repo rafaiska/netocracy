@@ -1,15 +1,16 @@
 DIRINCLUDE=./include
-DIROBJETO=./obj
+DIROBJ=./obj
+DIRSRC=./src
 CC=g++
 CFLAGS=-I$(DIRINCLUDE) -g -lcurlpp -lcurl -std=c++2a
 
 _DEPEND = auth_comm.hpp
 DEPEND = $(patsubst %,$(DIRINCLUDE)/%,$(_DEPEND))
 
-_OBJETO = auth_comm.o main.o
-OBJETO = $(patsubst %,$(DIROBJETO)/%,$(_OBJETO))
+_OBJ = auth_comm.o main.o
+OBJ = $(patsubst %,$(DIROBJ)/%,$(_OBJ))
 
-$(DIROBJETO)/%.o: %.cpp $(DEPEND)
+$(DIROBJ)/%.o: $(DIRSRC)/%.cpp $(DEPEND)
 	@mkdir -p obj
 	$(CC) -c -o $@ $< $(CFLAGS)
 
