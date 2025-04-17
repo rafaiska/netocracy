@@ -2,18 +2,17 @@
 #include <arpa/inet.h>
 #include <chrono>
 #include <thread>
-#include "socket_addr.hpp"
+#include "user_comm.hpp"
 
 int main(int argc, char* argv[]) {
   if (argc != 2)
   {
     std::cout << "Insufficient arguments.\nExpected: $./server <BROADCAST_IP_ADDR>\n";
+    return 1;
   }
-  
-  sockaddr_in myAddr;
-  myAddr.sin_family = AF_INET;
-  myAddr.sin_port = htons( 80 );
-  inet_pton(AF_INET, argv[1], &myAddr.sin_addr);
+
+  std::string address(argv[1]);
+  ncy::UserCommunication user_comm(address);
 
   AuthorizationServerComms comms("localhost:8000/authorize_login_node");
   comms.connect();

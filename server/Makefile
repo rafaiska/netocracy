@@ -7,7 +7,7 @@ CFLAGS=-I$(DIRINCLUDE) -g -lcurlpp -lcurl -std=c++2a
 _DEPEND = auth_comm.hpp
 DEPEND = $(patsubst %,$(DIRINCLUDE)/%,$(_DEPEND))
 
-_OBJ = auth_comm.o main.o
+_OBJ = auth_comm.o socket_addr_factory.o user_comm.o main.o
 OBJ = $(patsubst %,$(DIROBJ)/%,$(_OBJ))
 
 $(DIROBJ)/%.o: $(DIRSRC)/%.cpp $(DEPEND)
@@ -16,7 +16,7 @@ $(DIROBJ)/%.o: $(DIRSRC)/%.cpp $(DEPEND)
 
 all: server.out
 
-server.out: ./obj/auth_comm.o ./obj/main.o
+server.out: $(OBJ)
 	@mkdir -p bin
 	$(CC) -o ./bin/$@ $^ $(CFLAGS)
 

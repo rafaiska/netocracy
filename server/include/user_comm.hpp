@@ -10,7 +10,7 @@ private:
   ncy::SocketAddressPtr broadcast_address;
 
 public:
-  UserCommunication(char *ip_address);
+  UserCommunication(std::string &ip_address);
 };
 
 } // namespace ncy
