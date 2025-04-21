@@ -12,5 +12,6 @@ router.register(r'groups', views.GroupViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    path('<str:username>/session', views.get_current_session)
+    path('<str:username>/session', views.get_current_session),
+    path('register_game_node', views.register_game_node)
 ]

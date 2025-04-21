@@ -72,3 +72,9 @@ def get_current_session(request, username):
 
     serializer = NCYSessionSerializer(udata.last_session, context={'request': request})
     return JsonResponse(serializer.data)
+
+@api_view(['POST'])
+def register_game_node(request):
+    if 'register_game_node' in request.user.get_all_permissions():
+        return HttpResponse(status=200)
+    return HttpResponse(status=400)

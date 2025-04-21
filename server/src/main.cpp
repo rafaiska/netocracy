@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
   std::string address(argv[1]);
   ncy::UserCommunication user_comm(address);
 
-  AuthorizationServerComms comms("localhost:8000/authorize_login_node");
+  AuthorizationServerComms comms("localhost:8000/register_game_node");
   comms.connect();
   std::cout << comms.get_status() << '\n';
 

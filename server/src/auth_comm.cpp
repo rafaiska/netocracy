@@ -9,6 +9,7 @@ void AuthorizationServerComms::connect() {
 
     std::list<std::string> header;
     header.push_back("Content-Type: application/octet-stream");
+    header.push_back("Authorization: admin lol123");
 
     request.setOpt(new curlpp::options::HttpHeader(header));
 
